@@ -44,11 +44,12 @@ Patch7: unbound-1.6.6-rh1775706.patch
 Patch8: unbound-1.6.6-amplifying-an-incoming-query.patch
 
 Group: System Environment/Daemons
-BuildRequires: openssl-devel
+BuildRequires: openssl-compat-10-devel
 %if %{with_test}
 # needed for the test suite
 BuildRequires: bind-utils
 BuildRequires: ldns
+BuildRequires: ldns-utils
 BuildRequires: vim-common nmap-ncat
 %endif
 # needed to regenerate configparser
@@ -348,6 +349,9 @@ fi
 %endif
 
 %changelog
+* Thu Feb 05 2026 Philippe Coval <philippe.coval@vates.tech> - 1.6.6-5.1
+- Add ldns-utils for check
+
 * Thu Jun 11 2020 Anna Khaitovich <akhaitov@redhat.com> - 1.6.6-5
 - Fix incomplete amplifying-an-incoming-query patch
 - Resolves: rhbz#1846424
