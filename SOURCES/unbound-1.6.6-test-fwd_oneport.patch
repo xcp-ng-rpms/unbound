@@ -1,0 +1,56 @@
+From f41fcb93de47ddf2ec5063be1df29e99cafc61c0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Petr=20Men=C5=A1=C3=ADk?= <pemensik@redhat.com>
+Date: Wed, 11 Oct 2017 23:04:50 +0200
+Subject: [PATCH 1/2] Do not fail if two tests run on the same machine.
+ Randomize outgoing port too.
+
+---
+ testdata/fwd_oneport.tdir/fwd_oneport.conf | 2 +-
+ testdata/fwd_oneport.tdir/fwd_oneport.pre  | 7 +++++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/testdata/fwd_oneport.tdir/fwd_oneport.conf b/testdata/fwd_oneport.tdir/fwd_oneport.conf
+index f3427fe..76cade4 100644
+--- a/testdata/fwd_oneport.tdir/fwd_oneport.conf
++++ b/testdata/fwd_oneport.tdir/fwd_oneport.conf
+@@ -5,7 +5,7 @@ server:
+ 	port: @PORT@
+ 	outgoing-range: 2
+ 	outgoing-port-avoid: 0-65535
+-	outgoing-port-permit: 20675
++	outgoing-port-permit: @OUTPORT@
+ 	directory: ""
+ 	pidfile: "unbound.pid"
+ 	chroot: ""
+diff --git a/testdata/fwd_oneport.tdir/fwd_oneport.pre b/testdata/fwd_oneport.tdir/fwd_oneport.pre
+index eeb5238..256d8dc 100644
+--- a/testdata/fwd_oneport.tdir/fwd_oneport.pre
++++ b/testdata/fwd_oneport.tdir/fwd_oneport.pre
+@@ -5,11 +5,13 @@
+ [ -f .tpkg.var.test ] && source .tpkg.var.test
+ 
+ . ../common.sh
+-get_random_port 2
++get_random_port 3
+ UNBOUND_PORT=$RND_PORT
+ FWD_PORT=$(($RND_PORT + 1))
++OUT_PORT=$(($RND_PORT + 2))
+ echo "UNBOUND_PORT=$UNBOUND_PORT" >> .tpkg.var.test
+ echo "FWD_PORT=$FWD_PORT" >> .tpkg.var.test
++echo "OUT_PORT=$OUT_PORT" >> .tpkg.var.test
+ 
+ # start forwarder
+ get_ldns_testns
+@@ -18,7 +20,8 @@ FWD_PID=$!
+ echo "FWD_PID=$FWD_PID" >> .tpkg.var.test
+ 
+ # make config file
+-sed -e 's/@PORT\@/'$UNBOUND_PORT'/' -e 's/@TOPORT\@/'$FWD_PORT'/' < fwd_oneport.conf > ub.conf
++sed -e 's/@PORT\@/'$UNBOUND_PORT'/' -e 's/@TOPORT\@/'$FWD_PORT'/' -e 's/@OUTPORT\@/'$OUT_PORT'/' < fwd_oneport.conf > ub.conf
++
+ # start unbound in the background
+ PRE="../.."
+ $PRE/unbound -d -c ub.conf >unbound.log 2>&1 &
+-- 
+2.9.5
+

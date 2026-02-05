@@ -1,0 +1,17 @@
+diff --git a/testcode/mini_tpkg.sh b/testcode/mini_tpkg.sh
+index ebf27a7..d0a66aa 100755
+--- a/testcode/mini_tpkg.sh
++++ b/testcode/mini_tpkg.sh
+@@ -116,6 +116,12 @@ if test -f $name.post; then
+ fi
+ echo "DateRunEnd: "`date "+%s" 2>/dev/null` >> $result
+ 
++if test "$success" = "no"; then
++	echo "## Start of $name"
++	cat $result
++	echo "## End of $name"
++fi
++
+ mv $result ..
+ cd ..
+ rm -rf $dir

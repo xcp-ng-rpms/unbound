@@ -1,0 +1,71 @@
+diff --git a/testcode/do-tests.sh b/testcode/do-tests.sh
+index 5439f0f..1e9a424 100755
+--- a/testcode/do-tests.sh
++++ b/testcode/do-tests.sh
+@@ -1,6 +1,10 @@
+ #!/usr/bin/env bash
+ . testdata/common.sh
+ 
++# make sure that the binaries used during tests can find the libraries compiled with them
++LD_LIBRARY_PATH_BAK="$LD_LIBRARY_PATH"
++export LD_LIBRARY_PATH="$(pwd)/.libs"
++
+ NEED_SPLINT='00-lint.tdir'
+ NEED_DOXYGEN='01-doc.tdir'
+ NEED_XXD='fwd_compress_c00c.tdir fwd_zero.tdir'
+@@ -11,6 +15,20 @@ NEED_IPV6='fwd_ancil.tdir fwd_tcp_tc6.tdir stub_udp6.tdir edns_cache.tdir'
+ NEED_NOMINGW='tcp_sigpipe.tdir 07-confroot.tdir 08-host-lib.tdir fwd_ancil.tdir'
+ NEED_DNSCRYPT_PROXY='dnscrypt_queries.tdir dnscrypt_queries_chacha.tdir'
+ 
++# 01-doc - checks for errors and warnings and there are warnings due to obsolted keywords
++# in the doxygen documentation. Not a big deal, therefore skipping this.
++#
++# 06-ianaports - This checks if the bundled copy is up to date, which is obviously not
++# as the version we are shipping is old version
++#
++# root_anchor - This fails because the pem file has been updated and re are shipping an
++# old copy of it.
++#
++# root_hints - This fails because addresses of root servers changed and we are shipping
++# an old copy of it. This is not an issue as all servers usually do priming on startup
++#
++ALWAYS_SKIP='01-doc.tdir 06-ianaports.tdir root_anchor.tdir root_hints.tdir'
++
+ # test if dig and ldns-testns are available.
+ test_tool_avail "dig"
+ test_tool_avail "ldns-testns"
+@@ -52,6 +70,11 @@ for test in `ls -d *.tdir`; do
+ 			SKIP=1;
+ 		fi
+ 	fi
++
++	if echo $ALWAYS_SKIP | grep $test >/dev/null; then
++		SKIP=1;
++	fi
++
+ 	if test $SKIP -eq 0; then
+ 		echo $test
+ 		sh ../testcode/mini_tdir.sh -a ../.. exe $test
+@@ -59,5 +82,21 @@ for test in `ls -d *.tdir`; do
+ 		echo "skip $test"
+ 	fi
+ done
+-sh ../testcode/mini_tdir.sh report
++sh ../testcode/mini_tdir.sh report > .report.txt
++cat .report.txt
++
++# Make sure the test suite fails when some test failed
++if grep "FAILED" .report.txt >/dev/null; then
++	echo "Some tests FAILED!!!"
++	RESULTS=1
++else
++	echo "All tests PASSED"
++	RESULTS=0
++fi
++rm -f .report.txt
+ cat .perfstats.txt
++
++# restore LD_LIBRARY_PATH
++export LD_LIBRARY_PATH=$LD_LIBRARY_PATH_BAK
++
++exit $RESULTS

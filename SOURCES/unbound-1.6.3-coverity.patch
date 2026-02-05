@@ -1,0 +1,92 @@
+diff --git a/compat/arc4_lock.c b/compat/arc4_lock.c
+index 0c45ad0..7fb9cdc 100644
+--- a/compat/arc4_lock.c
++++ b/compat/arc4_lock.c
+@@ -32,7 +32,7 @@
+  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ #include "config.h"
+-#define LOCKRET(func) func
++#define LOCKRET(func) (void)func
+ #include "util/locks.h"
+ 
+ void _ARC4_LOCK(void);
+diff --git a/daemon/remote.c b/daemon/remote.c
+index 243d94c..a377aca 100644
+--- a/daemon/remote.c
++++ b/daemon/remote.c
+@@ -371,7 +371,9 @@ add_open(const char* ip, int nr, struct listen_port** list, int noproto_is_err,
+ 					  (unsigned)cfg_uid, (unsigned)cfg_gid,
+ 					  ip, strerror(errno));
+ 			}
+-			chmod(ip, (mode_t)(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP));
++			if (chmod(ip, (mode_t)(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) == -1)
++				verbose(VERB_QUERY, "cannot chmod %s: %s",
++					ip, strerror(errno));
+ #else
+ 			(void)cfg;
+ #endif
+@@ -387,7 +389,7 @@ add_open(const char* ip, int nr, struct listen_port** list, int noproto_is_err,
+ 			}
+ #endif /* USE_WINSOCK */
+ 			log_err("control interface %s:%s getaddrinfo: %s %s",
+-				ip?ip:"default", port, gai_strerror(r),
++				ip, port, gai_strerror(r),
+ #ifdef EAI_SYSTEM
+ 				r==EAI_SYSTEM?(char*)strerror(errno):""
+ #else
+diff --git a/iterator/iter_scrub.c b/iterator/iter_scrub.c
+index 1bee85c..6bdfe41 100644
+--- a/iterator/iter_scrub.c
++++ b/iterator/iter_scrub.c
+@@ -437,7 +437,6 @@ scrub_normalize(sldns_buffer* pkt, struct msg_parse* msg,
+ 					rrset->rrset_all_next =
+ 						nx->rrset_all_next;
+ 					nx->rrset_all_next = rrset;
+-					prev = nx;
+ 				}
+ 			}
+ 
+diff --git a/services/listen_dnsport.c b/services/listen_dnsport.c
+index 3b53676..36c67c6 100644
+--- a/services/listen_dnsport.c
++++ b/services/listen_dnsport.c
+@@ -1072,11 +1072,11 @@ ports_create_if(const char* ifname, int do_auto, int do_udp, int do_tcp,
+ {
+ 	int s, noip6=0;
+ #ifdef USE_DNSCRYPT
+-	int is_dnscrypt = ((strchr(ifname, '@') && 
++	const int is_dnscrypt = ((strchr(ifname, '@') &&
+ 			atoi(strchr(ifname, '@')+1) == dnscrypt_port) ||
+ 			(!strchr(ifname, '@') && atoi(port) == dnscrypt_port));
+ #else
+-	int is_dnscrypt = 0;
++	const int is_dnscrypt = 0;
+ 	(void)dnscrypt_port;
+ #endif
+ 
+diff --git a/services/localzone.c b/services/localzone.c
+index 6bde432..00d044a 100644
+--- a/services/localzone.c
++++ b/services/localzone.c
+@@ -1079,7 +1079,7 @@ local_zones_tags_lookup(struct local_zones* zones,
+ 	key.name = name;
+ 	key.namelen = len;
+ 	key.namelabs = labs;
+-	rbtree_find_less_equal(&zones->ztree, &key, &res);
++	(void)rbtree_find_less_equal(&zones->ztree, &key, &res);
+ 	result = (struct local_zone*)res;
+ 	/* exact or smaller element (or no element) */
+ 	if(!result || result->dclass != dclass)
+diff --git a/smallapp/unbound-host.c b/smallapp/unbound-host.c
+index d7a36a2..68f789a 100644
+--- a/smallapp/unbound-host.c
++++ b/smallapp/unbound-host.c
+@@ -330,6 +330,7 @@ pretty_output(char* q, int t, int c, struct ub_result* result, int docname)
+ 					exit(1);
+ 				}
+ 				printf("%s\n", s);
++				free(s);
+ 			} else	printf(" has no %s record", tstr);
+ 			printf(" %s\n", secstatus);
+ 		}
