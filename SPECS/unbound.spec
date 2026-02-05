@@ -12,7 +12,7 @@
 Summary: Validating, recursive, and caching DNS(SEC) resolver
 Name: unbound
 Version: 1.6.6
-Release: 1%{?dist}
+Release: 5%{?dist}
 License: BSD
 Url: https://unbound.net/
 Source: https://www.unbound.net/downloads/%{name}-%{version}.tar.gz
@@ -39,6 +39,10 @@ Patch3: unbound-1.6.3-print-test-fails.patch
 Patch4: unbound-1.6.3-coverity.patch
 # Randomize outgoing port too, do not fail on two running builds on one host
 Patch5: unbound-1.6.6-test-fwd_oneport.patch
+Patch6: unbound-1.6.6-fix-domain-insecure-for-stub-zone.patch
+Patch7: unbound-1.6.6-rh1775706.patch
+Patch8: unbound-1.6.6-amplifying-an-incoming-query.patch
+
 Group: System Environment/Daemons
 BuildRequires: openssl-devel
 %if %{with_test}
@@ -137,6 +141,9 @@ Python modules and extensions for unbound
 %patch3 -p1 -b .testlog
 %patch4 -p1 -b .coverity
 %patch5 -p1 -b .test-fwd_oneport
+%patch6 -p1 -b .domain-insecure
+%patch7 -p1 -b .rh1775706
+%patch8 -p1 -b .amplifying-an-incoming-query
 
 # regrnerate config parser due to new options added
 echo "#include \"config.h\"" > util/configlexer.c || echo "Failed to create configlexer"
@@ -348,6 +355,22 @@ fi
 %endif
 
 %changelog
+* Thu Jun 11 2020 Anna Khaitovich <akhaitov@redhat.com> - 1.6.6-5
+- Fix incomplete amplifying-an-incoming-query patch
+- Resolves: rhbz#1846424
+
+* Sun May 31 2020 Anna Khaitovich <akhaitov@redhat.com> - 1.6.6-4
+- Fix amplifying an incoming query into a large number of queries directed to a target
+- Resolves: rhbz#1839172 (CVE-2020-12662), rhbz#1840258 (CVE-2020-12663)
+
+* Tue Dec 03 2019 Petr Menšík <pemensik@redhat.com> - 1.6.6-3
+- Lower CPU usage on slow log I/O (#1775706)
+
+* Thu Jul 25 2019 Martin Osvald <mosvald@redhat.com> - 1.6.6-2
+- Do not search for DNSSEC info when domain-insecure is set
+  for stub zone (#1678550)
+- Remove KSK-2010 from configuration files - it has been revoked (#1665503)
+
 * Wed Oct 11 2017 Petr Menšík <pemensik@redhat.com> - 1.6.6-1
 - Rebase to 1.6.6
 - Enable RFC 8145 Trust Anchor Signaling to help the root zone get keytag statistics

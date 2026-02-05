@@ -1,0 +1,45 @@
+From 52aeaf4924ec3f6689e6aafedbe41473d2bda992 Mon Sep 17 00:00:00 2001
+From: Wouter Wijngaards <wouter@nlnetlabs.nl>
+Date: Tue, 14 Nov 2017 10:01:44 +0000
+Subject: [PATCH] - Fix #2882: Unbound behaviour changes (wrong) when
+ domain-insecure is set for stub zone. It no longer searches for DNSSEC
+ information.
+
+git-svn-id: file:///svn/unbound/trunk@4404 be551aaa-1e26-0410-a405-d3ace91eadb9
+---
+ iterator/iter_utils.c | 5 +++++
+ iterator/iter_utils.h | 2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/iterator/iter_utils.c b/iterator/iter_utils.c
+index 0b1b456..70cab40 100644
+--- a/iterator/iter_utils.c
++++ b/iterator/iter_utils.c
+@@ -656,6 +656,11 @@ iter_indicates_dnssec(struct module_env* env, struct delegpt* dp,
+ 	/* a trust anchor exists with this name, RRSIGs expected */
+ 	if((a=anchor_find(env->anchors, dp->name, dp->namelabs, dp->namelen,
+ 		dclass))) {
++		if(a->numDS == 0 && a->numDNSKEY == 0) {
++			/* insecure trust point */
++			lock_basic_unlock(&a->lock);
++			return 0;
++		}
+ 		lock_basic_unlock(&a->lock);
+ 		return 1;
+ 	}
+diff --git a/iterator/iter_utils.h b/iterator/iter_utils.h
+index 50c5fc0..5b6df7f 100644
+--- a/iterator/iter_utils.h
++++ b/iterator/iter_utils.h
+@@ -193,7 +193,7 @@ int iter_indicates_dnssec_fwd(struct module_env* env,
+  * @param dp: delegation point.
+  * @param msg: delegation message, with DS if a secure referral.
+  * @param dclass: class of query.
+- * @return 1 if dnssec is expected, 0 if not.
++ * @return 1 if dnssec is expected, 0 if not or insecure point above qname.
+  */
+ int iter_indicates_dnssec(struct module_env* env, struct delegpt* dp,
+ 	struct dns_msg* msg, uint16_t dclass);
+-- 
+2.20.1
+
