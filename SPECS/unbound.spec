@@ -136,14 +136,7 @@ Python modules and extensions for unbound
 %endif
 
 %prep
-%setup -q 
-%patch1 -p1 -b .longcheck-fixup
-%patch3 -p1 -b .testlog
-%patch4 -p1 -b .coverity
-%patch5 -p1 -b .test-fwd_oneport
-%patch6 -p1 -b .domain-insecure
-%patch7 -p1 -b .rh1775706
-%patch8 -p1 -b .amplifying-an-incoming-query
+%autosetup -p 1
 
 # regrnerate config parser due to new options added
 echo "#include \"config.h\"" > util/configlexer.c || echo "Failed to create configlexer"
