@@ -1,6 +1,6 @@
 %{?!with_python:      %global with_python      1}
 %{?!with_munin:       %global with_munin       0}
-%{?!with_test:        %global with_test        1}
+%{?!with_test:        %global with_test        0}
 
 %if %{with_python}
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
