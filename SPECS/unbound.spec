@@ -351,6 +351,7 @@ fi
 %changelog
 * Thu Feb 05 2026 Philippe Coval <philippe.coval@vates.tech> - 1.6.6-5.1
 - Add ldns-utils for check
+- Fix date mistake in spec
 
 * Thu Jun 11 2020 Anna Khaitovich <akhaitov@redhat.com> - 1.6.6-5
 - Fix incomplete amplifying-an-incoming-query patch
@@ -813,7 +814,7 @@ fi
 * Wed May 21 2008 Paul Wouters <paul@xelerance.com> - 1.0.0-1
 - Split of -devel package, fixed dependancies, make rpmlint happy
 
-* Thu Apr 25 2008 Wouter Wijngaards <wouter@nlnetlabs.nl> - 0.12
+* Fri Apr 25 2008 Wouter Wijngaards <wouter@nlnetlabs.nl> - 0.12
 - Using parts from ports collection entry by Jaap Akkerhuis.
 - Using Fedoraproject wiki guidelines.
 
